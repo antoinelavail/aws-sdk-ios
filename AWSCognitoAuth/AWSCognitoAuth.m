@@ -199,6 +199,12 @@ static NSString * AWSCognitoAuthAsfDeviceId = @"asf.device.id";
     [self enqueueGetSessionWithCompletion:completion];
 }
 
+- (void)cancelGetSession:(NSError *)error {
+    [self setInternalGetSessionErrorAndCancelSignInOperations:error];
+    self.isProcessingSignIn = NO;
+    [self cleanUpAndCallGetSessionBlock:nil error:error];
+}
+
 /**
  Adds another getSession operation to the serialized queue of getSession requests
  */
@@ -271,6 +277,10 @@ static NSString * AWSCognitoAuthAsfDeviceId = @"asf.device.id";
     if (callbackURL) {
         [self processURL:callbackURL forRedirection:YES];
     }
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    decisionHandler(WKNavigationActionPolicyAllow);
 }
 
 -(void)startHeadlessSignInForURL:(NSString *)url {
