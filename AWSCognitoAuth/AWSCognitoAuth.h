@@ -113,7 +113,7 @@ typedef void (^AWSCognitoAuthSignOutBlock)(NSError * _Nullable error);
  */
 - (void)getSession: (nullable AWSCognitoAuthGetSessionBlock) completion;
 
-- (void)cancelGetSession;
+- (void)cancelGetSession:(NSError *)error;
 
 /**
  Sign out locally and from the server, use delegate to get view controller.
