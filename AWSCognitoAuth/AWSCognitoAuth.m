@@ -258,11 +258,30 @@ static NSString * AWSCognitoAuthAsfDeviceId = @"asf.device.id";
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation
 {
     if (self.isProcessingSignIn) {
-        [webView evaluateJavaScript:@"(document.getElementById('invalid-credentials') == null)" completionHandler:^(id result, NSError *error) {
-            if ([result boolValue] == NO) {
-                [self completeGetSession:nil error:[self getError:@"Invalid Credentials" code:AWSCognitoAuthClientErrorInvalidCredentials]];
-            } else if (self.delegate) {
-                [self.delegate headlessWebView:self.headlessWebView didFinishNavigationWithURL:self.headlessWebView.URL];
+        [webView evaluateJavaScript:@"(document.getElementById('error-page') == null)" completionHandler:^(id errorPage, NSError *error) {
+            if (error) {
+                [self cancelGetSession:error];
+            } else if ([errorPage boolValue] == NO) {
+                [webView evaluateJavaScript:@"({error: {status: document.getElementById('error-status-code').textContent, message: document.getElementById('error-message').textContent, description: document.getElementById('error-description').textContent, cause: document.getElementById('error-cause').textContent }})" completionHandler:^(id errorObject, NSError *error) {
+                    if (error) {
+                        [self cancelGetSession:error];
+                    } else if (errorObject) {
+                        [self cancelGetSession:[NSError errorWithDomain:AWSCognitoAuthErrorDomain code:AWSCognitoAuthClientErrorInternalError userInfo:@{
+                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:@"%@ - %@", errorObject[@"error"][@"status"], errorObject[@"error"][@"message"]],
+                                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%@\n%@", errorObject[@"error"][@"description"], errorObject[@"error"][@"cause"]]
+                        }]];
+                    }
+                }];
+            } else {
+                [webView evaluateJavaScript:@"(document.getElementById('invalid-credentials') == null)" completionHandler:^(id result, NSError *error) {
+                    if (error) {
+                        [self cancelGetSession:error];
+                    } else if ([result boolValue] == NO) {
+                        [self completeGetSession:nil error:[self getError:@"Invalid Credentials" code:AWSCognitoAuthClientErrorInvalidCredentials]];
+                    } else if (self.delegate) {
+                        [self.delegate headlessWebView:self.headlessWebView didFinishNavigationWithURL:self.headlessWebView.URL];
+                    }
+                }];
             }
         }];
     } else if (self.isProcessingSignOut) {

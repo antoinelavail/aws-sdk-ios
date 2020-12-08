@@ -53,7 +53,8 @@ typedef NS_ENUM(NSInteger, AWSCognitoAuthClientErrorType) {
     AWSCognitoAuthClientInvalidAuthenticationDelegate = -5000,
     AWSCognitoAuthClientNoIdTokenIssued = -6000,
     AWSCognitoAuthClientErrorExpiredRefreshToken = -7000,
-    AWSCognitoAuthClientErrorInvalidCredentials = -8000
+    AWSCognitoAuthClientErrorInvalidCredentials = -8000,
+    AWSCognitoAuthClientErrorInternalError = -9000
 };
 
 typedef void (^AWSCognitoAuthGetSessionBlock)(AWSCognitoAuthUserSession * _Nullable session, NSError * _Nullable error);
